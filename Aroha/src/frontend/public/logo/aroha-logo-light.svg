@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none">
+  <defs>
+    <linearGradient id="aroha-grad-light" x1="20" y1="100" x2="100" y2="20" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#2A9D8F"/>
+      <stop offset="100%" stop-color="#A78BFA"/>
+    </linearGradient>
+  </defs>
+  <rect width="120" height="120" rx="28" fill="#F7F8F5"/>
+  <path d="M60 22L26 98h14l6.5-16h27L80 98h14L60 22z" fill="url(#aroha-grad-light)"/>
+  <path d="M60 46L48.5 74h23L60 46z" fill="#F7F8F5"/>
+  <rect x="42" y="68" width="36" height="5" rx="2.5" fill="#E9B44C"/>
+  <path d="M60 14l4 6-4 6-4-6z" fill="#2A9D8F" opacity="0.6"/>
+</svg>
+

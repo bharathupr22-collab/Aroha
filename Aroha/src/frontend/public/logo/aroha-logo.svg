@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none">
+  <defs>
+    <linearGradient id="aroha-grad" x1="20" y1="100" x2="100" y2="20" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#2A9D8F"/>
+      <stop offset="100%" stop-color="#A78BFA"/>
+    </linearGradient>
+  </defs>
+  <!-- Rounded square container -->
+  <rect width="120" height="120" rx="28" fill="#17212B"/>
+  <!-- Geometric A lettermark -->
+  <!-- Main triangle stroke of A -->
+  <path d="M60 22L26 98h14l6.5-16h27L80 98h14L60 22z" fill="url(#aroha-grad)"/>
+  <!-- Inner cutout to create the A shape -->
+  <path d="M60 46L48.5 74h23L60 46z" fill="#17212B"/>
+  <!-- Crossbar accent -->
+  <rect x="42" y="68" width="36" height="5" rx="2.5" fill="#E9B44C"/>
+  <!-- Small diamond accent above A -->
+  <path d="M60 14l4 6-4 6-4-6z" fill="#2A9D8F" opacity="0.6"/>
+</svg>
+
