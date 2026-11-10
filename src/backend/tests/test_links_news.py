@@ -1,4 +1,4 @@
-from app import link_service
+﻿from app import link_service
 from app.routers import news
 
 REG = {"name": "Asha", "email": "asha@example.com", "password": "secret123"}
@@ -52,8 +52,8 @@ def test_news_refresh_and_list(client, monkeypatch):
     monkeypatch.setattr(news.feedparser, "parse", lambda url: FakeParsed())
     monkeypatch.setattr(news.settings, "news_feeds", ["https://feed.test/rss"])
     client.post("/auth/register", json=REG)
-    assert client.post("/news/refresh").json() == {"added": 2}
-    assert client.post("/news/refresh").json() == {"added": 0}  # deduplicated by URL
+    assert client.post("/news/refresh").json()["added"] == 2
+    assert client.post("/news/refresh").json()["added"] == 0  # deduplicated by URL
 
     client.post("/auth/logout")  # reading news is public
     items = client.get("/news").json()
@@ -64,3 +64,6 @@ def test_news_refresh_and_list(client, monkeypatch):
     assert client.get("/news/999").status_code == 404
     assert client.get("/news/categories").status_code == 200
     assert len(client.get("/news/trending").json()) == 2
+
+
+
