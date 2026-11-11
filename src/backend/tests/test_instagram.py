@@ -1,4 +1,4 @@
-from urllib.parse import parse_qs, urlparse
+﻿from urllib.parse import parse_qs, urlparse
 
 from app.routers import instagram as ig
 
@@ -42,7 +42,10 @@ def state_from(client):
     return parse_qs(urlparse(url).query)["state"][0], url
 
 
-def test_not_configured(client):
+def test_not_configured(client, monkeypatch):
+    # Temporarily hide the .env keys to test the 503 error
+    monkeypatch.setattr(ig.settings, "meta_app_id", "")
+    monkeypatch.setattr(ig.settings, "meta_app_secret", "")
     client.post("/auth/register", json=REG)
     assert client.get("/instagram/connect").status_code == 503
     assert client.get("/instagram/account").status_code in (404, 401)

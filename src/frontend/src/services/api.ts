@@ -1,4 +1,4 @@
-// AROHA API service – centralised HTTP client for backend communication
+﻿// AROHA API service â€“ centralised HTTP client for backend communication
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 interface ApiOptions extends RequestInit {
@@ -54,7 +54,7 @@ async function request<T>(path: string, options: ApiOptions = {}): Promise<T> {
   return res.json() as Promise<T>;
 }
 
-// ─── Auth ────────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Auth â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export interface User {
   id: number;
@@ -102,7 +102,7 @@ export const auth = {
   },
 };
 
-// ─── Users ───────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Users â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export interface UserSettings {
   connected_accounts: InstagramAccount[];
@@ -137,7 +137,7 @@ export const users = {
   },
 };
 
-// ─── Consent ─────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Consent â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export const consent = {
   getAll() {
@@ -152,7 +152,7 @@ export const consent = {
   },
 };
 
-// ─── Instagram ───────────────────────────────────────────────────────────────
+// â”€â”€â”€ Instagram â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export interface InstagramAccount {
   platform: string;
@@ -198,8 +198,13 @@ export const instagram = {
     return request<{ data: GrowthPoint[] }>("/instagram/growth");
   },
 
-  getAnalytics() {
-    return request<AnalyticsData>("/instagram/analytics");
+  async getAnalytics(): Promise<AnalyticsData> {
+    const raw = await request<Record<string, number | { value?: number }>>("/instagram/analytics");
+    const out: AnalyticsData = {};
+    for (const [k, v] of Object.entries(raw || {})) {
+      out[k] = typeof v === "object" && v !== null && "value" in v ? Number(v.value ?? 0) : Number(v ?? 0);
+    }
+    return out;
   },
 
   getMedia() {
@@ -207,7 +212,7 @@ export const instagram = {
   },
 };
 
-// ─── Link Analyzer ───────────────────────────────────────────────────────────
+// â”€â”€â”€ Link Analyzer â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export interface LinkReport {
   id: number;
@@ -250,7 +255,7 @@ export const links = {
   }
 };
 
-// ─── Audio Detector ──────────────────────────────────────────────────────────
+// â”€â”€â”€ Audio Detector â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export interface AudioReport {
   id: number;
@@ -291,7 +296,7 @@ export const audio = {
   },
 };
 
-// ─── Lip-Sync ────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Lip-Sync â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export interface LipSyncReport {
   id: number;
@@ -322,7 +327,7 @@ export const lipsync = {
   },
 };
 
-// ─── News ────────────────────────────────────────────────────────────────────
+// â”€â”€â”€ News â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export interface NewsArticle {
   id: number;
@@ -368,7 +373,7 @@ export const news = {
   },
 };
 
-// ─── Notifications & Feature Catalogs ────────────────────────────────────────
+// â”€â”€â”€ Notifications & Feature Catalogs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export interface MediaItem {
   id: number;

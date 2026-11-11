@@ -1,11 +1,11 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSidebar } from "@/hooks/useSidebar";
 import { useAuth } from "@/hooks/useAuth";
-import { notifications } from "@/services/api";
+import { notifications, instagram, type InstagramAccount } from "@/services/api";
 import {
   Home,
   BarChart3,
@@ -55,16 +55,20 @@ export default function Sidebar() {
   const pathname = usePathname();
   const { user } = useAuth();
   const [unreadCount, setUnreadCount] = useState<number>(0);
+  const [igAccount, setIgAccount] = useState<InstagramAccount | null>(null);
 
   useEffect(() => {
     if (!user) return;
-    const fetchUnread = () => {
+    const fetchStatus = () => {
       notifications.getSummary()
         .then((s) => setUnreadCount(s.unread_count))
         .catch(() => {});
+      instagram.getAccount()
+        .then((acc) => setIgAccount(acc))
+        .catch(() => setIgAccount(null));
     };
-    fetchUnread();
-    const interval = setInterval(fetchUnread, 15000); // refresh count periodically
+    fetchStatus();
+    const interval = setInterval(fetchStatus, 15000);
     return () => clearInterval(interval);
   }, [user, pathname]);
 
@@ -78,7 +82,6 @@ export default function Sidebar() {
       {/* Logo area */}
       <div className="flex items-center h-16 px-4 border-b border-white/10 shrink-0">
         <Link href="/dashboard" className="flex items-center gap-3 min-w-0">
-          {/* Inline A logo mark */}
           <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-[#2A9D8F] to-[#A78BFA] flex items-center justify-center shrink-0">
             <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none">
               <path d="M12 3L4 21h3.5l1.5-3.8h6L16.5 21H20L12 3z" fill="white" />
@@ -93,7 +96,6 @@ export default function Sidebar() {
           )}
         </Link>
 
-        {/* Toggle button — desktop only */}
         <button
           onClick={toggle}
           className="ml-auto hidden lg:flex items-center justify-center w-7 h-7 rounded-md hover:bg-white/10 transition-colors"
@@ -102,7 +104,6 @@ export default function Sidebar() {
           {expanded ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
         </button>
 
-        {/* Close button — mobile only */}
         <button
           onClick={() => setMobileOpen(false)}
           className="ml-auto lg:hidden flex items-center justify-center w-7 h-7 rounded-md hover:bg-white/10 transition-colors"
@@ -168,13 +169,15 @@ export default function Sidebar() {
             onClick={() => setMobileOpen(false)}
             className={`
               flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200
-              text-gray-400 hover:bg-white/5 hover:text-white
+              ${igAccount ? "text-emerald-400 hover:bg-white/5" : "text-gray-400 hover:bg-white/5 hover:text-white"}
             `}
-            title={!expanded ? "Connect Instagram" : undefined}
+            title={!expanded ? (igAccount ? `@${igAccount.username} (Connected)` : "Connect Instagram") : undefined}
           >
             <InstagramIcon size={20} className="shrink-0" />
             {expanded && (
-              <span className="text-sm font-medium whitespace-nowrap">Connect Instagram</span>
+              <span className="text-sm font-medium whitespace-nowrap truncate">
+                {igAccount ? `@${igAccount.username}` : "Connect Instagram"}
+              </span>
             )}
           </Link>
         )}
@@ -225,7 +228,6 @@ export default function Sidebar() {
 
   return (
     <>
-      {/* Desktop sidebar */}
       <aside
         className={`
           hidden lg:flex flex-col fixed top-0 left-0 h-screen z-40
@@ -236,7 +238,6 @@ export default function Sidebar() {
         {sidebarContent}
       </aside>
 
-      {/* Mobile overlay */}
       {mobileOpen && (
         <div
           className="fixed inset-0 bg-black/50 z-40 lg:hidden"
@@ -244,7 +245,6 @@ export default function Sidebar() {
         />
       )}
 
-      {/* Mobile drawer */}
       <aside
         className={`
           fixed top-0 left-0 h-screen w-64 z-50 lg:hidden

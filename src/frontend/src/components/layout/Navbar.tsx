@@ -1,10 +1,11 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useSidebar } from "@/hooks/useSidebar";
 import { useAuth } from "@/hooks/useAuth";
-import { notifications } from "@/services/api";
+import { notifications, instagram, type InstagramAccount } from "@/services/api";
 import {
   Menu,
   Search,
@@ -19,9 +20,11 @@ import { InstagramIcon } from "@/components/icons/InstagramIcon";
 export default function Navbar() {
   const { setMobileOpen } = useSidebar();
   const { user, logout } = useAuth();
+  const pathname = usePathname();
   const [profileOpen, setProfileOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [unreadCount, setUnreadCount] = useState<number>(0);
+  const [igAccount, setIgAccount] = useState<InstagramAccount | null>(null);
   const profileRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -29,7 +32,10 @@ export default function Navbar() {
     notifications.getSummary()
       .then((s) => setUnreadCount(s.unread_count))
       .catch(() => {});
-  }, [user]);
+    instagram.getAccount()
+      .then((acc) => setIgAccount(acc))
+      .catch(() => setIgAccount(null));
+  }, [user, pathname]);
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -80,10 +86,15 @@ export default function Navbar() {
           {user && (
             <Link
               href="/dashboard/settings"
-              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-gray-100 text-gray-500 hover:bg-gray-200 transition-colors"
+              className={`hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${
+                igAccount
+                  ? "bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100"
+                  : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+              }`}
             >
               <InstagramIcon size={14} />
-              <span>Connect</span>
+              <span>{igAccount ? `@${igAccount.username}` : "Connect"}</span>
+              {igAccount && <span className="w-2 h-2 rounded-full bg-emerald-500" />}
             </Link>
           )}
 
@@ -169,4 +180,3 @@ export default function Navbar() {
     </header>
   );
 }
-
