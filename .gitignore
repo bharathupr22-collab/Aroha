@@ -18,3 +18,5 @@ build/
 
 docs/_build/pages_srs/
 docs/_build/*_check.pdf
+
+.zed/

@@ -174,6 +174,13 @@ export interface AnalyticsData {
 }
 
 export const instagram = {
+  connectCustomAccount(data: { username?: string; access_token?: string; external_url?: string }) {
+    return request<{ connected: boolean; username: string; platform_user_id: string }>("/instagram/connect-account", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  },
+
   getConnectUrl() {
     return request<{ url: string }>("/instagram/connect");
   },
@@ -478,3 +485,4 @@ export const notifications = {
 };
 
 export { ApiError };
+

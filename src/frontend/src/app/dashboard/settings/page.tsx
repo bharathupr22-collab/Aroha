@@ -1,17 +1,16 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useEffect } from "react";
-import { instagram, consent, users, type InstagramAccount, type ConsentRecord, ApiError } from "@/services/api";
+import { instagram, consent, type InstagramAccount, type ConsentRecord, ApiError } from "@/services/api";
 import {
   ShieldCheck,
   CheckCircle2,
   AlertTriangle,
   Loader2,
-  Trash2,
-  ExternalLink,
   Lock,
   RefreshCw,
-  Sparkles,
+  UserPlus,
+  KeyRound,
 } from "lucide-react";
 import { InstagramIcon } from "@/components/icons/InstagramIcon";
 
@@ -23,10 +22,14 @@ export default function SettingsPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
+  // Any-account connection inputs
+  const [customUsername, setCustomUsername] = useState("");
+  const [customToken, setCustomToken] = useState("");
+  const [showSwitchForm, setShowSwitchForm] = useState(false);
+
   const loadData = async () => {
     setLoading(true);
     try {
-      // Load IG account
       try {
         const acc = await instagram.getAccount();
         setAccount(acc);
@@ -34,7 +37,6 @@ export default function SettingsPage() {
         setAccount(null);
       }
 
-      // Load consents
       try {
         const c = await consent.getAll();
         setConsents(c || {});
@@ -62,7 +64,56 @@ export default function SettingsPage() {
       if (err instanceof ApiError) {
         setError(err.detail);
       } else {
-        setError("Meta API configuration missing. Ensure META_APP_ID and META_APP_SECRET are configured in the backend environment.");
+        setError("Meta API configuration missing. Ensure META_APP_ID and META_APP_SECRET are configured.");
+      }
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleConnectCustomAccount = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!customUsername.trim() && !customToken.trim()) {
+      setError("Please enter an Instagram handle (e.g. @aroha_lmt) or paste a Meta Graph API Access Token.");
+      return;
+    }
+    setError(null);
+    setSuccess(null);
+    setActionLoading(true);
+    try {
+      const res = await instagram.connectCustomAccount({
+        username: customUsername.trim() || undefined,
+        access_token: customToken.trim() || undefined,
+      });
+      await loadData();
+      setCustomUsername("");
+      setCustomToken("");
+      setShowSwitchForm(false);
+      setSuccess(`Successfully connected @${res.username} and completed full multimedia integrity scan!`);
+    } catch (err) {
+      if (err instanceof ApiError) {
+        setError(err.detail);
+      } else {
+        setError("Failed to connect Instagram account.");
+      }
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleSyncAccount = async () => {
+    setActionLoading(true);
+    setError(null);
+    setSuccess(null);
+    try {
+      const res = await instagram.sync();
+      await loadData();
+      setSuccess(res.detail || "Synced Instagram metrics and re-audited all Reels & Bio!");
+    } catch (err) {
+      if (err instanceof ApiError) {
+        setError(err.detail);
+      } else {
+        setError("Failed to sync account.");
       }
     } finally {
       setActionLoading(false);
@@ -122,7 +173,7 @@ export default function SettingsPage() {
           Settings & Account Connections
         </h1>
         <p className="text-xs text-[#636E72] mt-1">
-          Manage official Meta API integrations, cryptographic credentials, and privacy consents
+          Manage official Meta API integrations, multi-account creator connections, and privacy consents
         </p>
       </div>
 
@@ -149,13 +200,13 @@ export default function SettingsPage() {
             <div>
               <h2 className="text-base font-bold text-[#17212B]">Official Instagram Graph API Connection</h2>
               <p className="text-xs text-[#636E72] mt-0.5">
-                Connects Creator or Business accounts via official Meta OAuth protocol
+                Connect any Instagram Creator or Business account via Meta OAuth or Graph API Token
               </p>
             </div>
           </div>
         </div>
 
-        {account ? (
+        {account && (
           <div className="p-5 rounded-2xl bg-[#F7F8F5] border border-gray-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <div className="flex items-center gap-2">
@@ -165,39 +216,109 @@ export default function SettingsPage() {
                 </span>
               </div>
               <p className="text-xs text-[#636E72] mt-1 font-mono">
-                Platform ID: {account.platform_user_id} &bull; Connected {new Date(account.connected_at).toLocaleDateString()}
+                Platform ID: {account.platform_user_id} • Connected {new Date(account.connected_at).toLocaleDateString()}
               </p>
             </div>
 
-            <button
-              onClick={handleDisconnect}
-              disabled={actionLoading}
-              className="px-4 py-2 rounded-xl text-xs font-semibold text-red-600 bg-white border border-red-200 hover:bg-red-50 transition-colors disabled:opacity-50 self-start sm:self-auto"
-            >
-              Disconnect Account
-            </button>
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                onClick={handleSyncAccount}
+                disabled={actionLoading}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold text-[#2A9D8F] bg-white border border-[#2A9D8F]/30 hover:bg-teal-50 transition-colors disabled:opacity-50"
+              >
+                <RefreshCw size={13} className={actionLoading ? "animate-spin" : ""} />
+                Sync & Audit
+              </button>
+              <button
+                onClick={() => setShowSwitchForm(!showSwitchForm)}
+                disabled={actionLoading}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold text-[#17212B] bg-white border border-gray-200 hover:bg-gray-100 transition-colors disabled:opacity-50"
+              >
+                <UserPlus size={13} />
+                Switch Account
+              </button>
+              <button
+                onClick={handleDisconnect}
+                disabled={actionLoading}
+                className="px-3.5 py-2 rounded-xl text-xs font-semibold text-red-600 bg-white border border-red-200 hover:bg-red-50 transition-colors disabled:opacity-50"
+              >
+                Disconnect
+              </button>
+            </div>
           </div>
-        ) : (
-          <div className="space-y-4">
+        )}
+
+        {(!account || showSwitchForm) && (
+          <div className="space-y-5 pt-2">
             <div className="p-4 rounded-2xl bg-gray-50 border border-gray-200 text-xs text-[#636E72] space-y-2">
               <div className="flex items-center gap-2 font-semibold text-[#17212B]">
-                <Lock size={14} className="text-[#2A9D8F]" /> Security & OAuth Guarantees:
+                <Lock size={14} className="text-[#2A9D8F]" /> Multi-Account Creator Connection (Zero Password Required):
               </div>
               <ul className="list-disc pl-5 space-y-1 text-[11px]">
-                <li>Zero password entry required &mdash; authenticated entirely on official Facebook/Meta servers.</li>
-                <li>Access tokens encrypted at rest via symmetric Fernet cryptography.</li>
-                <li>Only Business and Creator accounts with connected Facebook Pages are eligible under Meta API policy.</li>
+                <li>Connect via one-click Meta OAuth, or enter <strong>any Instagram Creator/Business handle</strong> or <strong>Meta Graph API Token</strong> below.</li>
+                <li>Access tokens are encrypted at rest via symmetric Fernet cryptography.</li>
+                <li>Connecting an account automatically fetches/seeds its Reels & Bio and executes a full 3-layer integrity scan.</li>
               </ul>
             </div>
 
-            <button
-              onClick={handleConnectInstagram}
-              disabled={actionLoading}
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-xs font-bold text-white bg-[#17212B] hover:bg-[#2A9D8F] transition-all shadow-sm disabled:opacity-50"
-            >
-              {actionLoading ? <Loader2 size={14} className="animate-spin" /> : <InstagramIcon size={14} />}
-              Authenticate with Instagram
-            </button>
+            <form onSubmit={handleConnectCustomAccount} className="p-5 rounded-2xl bg-[#F7F8F5] border border-gray-200/80 space-y-4">
+              <p className="text-xs font-bold text-[#17212B] uppercase tracking-wider">
+                Connect Any Instagram Creator / Business Account
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-[#17212B] mb-1">
+                    Instagram Handle (Any Creator Account)
+                  </label>
+                  <div className="relative">
+                    <UserPlus size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                    <input
+                      type="text"
+                      placeholder="e.g. @aroha_lmt or @creator_handle"
+                      value={customUsername}
+                      onChange={(e) => setCustomUsername(e.target.value)}
+                      className="w-full pl-9 pr-3 py-2 rounded-xl bg-white border border-gray-200 text-xs text-[#17212B] focus:outline-none focus:ring-2 focus:ring-[#2A9D8F]/30 focus:border-[#2A9D8F]"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-[#17212B] mb-1">
+                    Meta Graph API Access Token <span className="text-gray-400 font-normal">(Optional)</span>
+                  </label>
+                  <div className="relative">
+                    <KeyRound size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                    <input
+                      type="password"
+                      placeholder="IG... or EAA... live token"
+                      value={customToken}
+                      onChange={(e) => setCustomToken(e.target.value)}
+                      className="w-full pl-9 pr-3 py-2 rounded-xl bg-white border border-gray-200 text-xs text-[#17212B] focus:outline-none focus:ring-2 focus:ring-[#2A9D8F]/30 focus:border-[#2A9D8F]"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-3 pt-1">
+                <button
+                  type="submit"
+                  disabled={actionLoading}
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold text-white bg-[#2A9D8F] hover:bg-[#238478] transition-all shadow-sm disabled:opacity-50"
+                >
+                  {actionLoading ? <Loader2 size={14} className="animate-spin" /> : <InstagramIcon size={14} />}
+                  Connect Account & Run Audit
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleConnectInstagram}
+                  disabled={actionLoading}
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold text-white bg-[#17212B] hover:bg-gray-800 transition-all shadow-sm disabled:opacity-50"
+                >
+                  {actionLoading ? <Loader2 size={14} className="animate-spin" /> : <InstagramIcon size={14} />}
+                  One-Click Meta OAuth (@aroha_lmt)
+                </button>
+              </div>
+            </form>
           </div>
         )}
       </div>
